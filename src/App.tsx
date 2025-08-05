@@ -45,7 +45,7 @@ function App() {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const text = e.target?.result as string;
         const parser = new XMLParser({

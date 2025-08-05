@@ -17,8 +17,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { XMLParser } from 'fast-xml-parser';
-import { AsBuiltData, ComparisonResult, NodeComparisonResult, Module } from '../types';
-import { getModuleInfo, getFCodeDescription } from '../constants/moduleMapping';
+import { ComparisonResult, NodeComparisonResult, Module } from '../types';
+import { getModuleInfo } from '../constants/moduleMapping';
 
 const xmlToJson = (xml: Element): any => {
   // Create the return object
@@ -42,12 +42,14 @@ const xmlToJson = (xml: Element): any => {
 
     for (let i = 0; i < xml.childNodes.length; i++) {
       const item = xml.childNodes.item(i);
-      if (item.nodeType === 3) { // text node
+      if (item.nodeType === 3) {
+        // text node
         const text = item.nodeValue?.trim();
         if (text) {
           textContent = text;
         }
-      } else if (item.nodeType === 1) { // element node
+      } else if (item.nodeType === 1) {
+        // element node
         hasElementChildren = true;
         const nodeName = item.nodeName;
         if (typeof obj[nodeName] === 'undefined') {
@@ -81,7 +83,9 @@ export const AsBuiltComparer: React.FC = () => {
   const [nodeComparisonResults, setNodeComparisonResults] = useState<NodeComparisonResult[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [groupedResults, setGroupedResults] = useState<Record<string, ComparisonResult[]>>({});
-  const [groupedNodeResults, setGroupedNodeResults] = useState<Record<string, NodeComparisonResult[]>>({});
+  const [groupedNodeResults, setGroupedNodeResults] = useState<
+    Record<string, NodeComparisonResult[]>
+  >({});
   const [partNumberMap1, setPartNumberMap1] = useState<Map<string, string>>(new Map());
   const [partNumberMap2, setPartNumberMap2] = useState<Map<string, string>>(new Map());
 
@@ -90,7 +94,7 @@ export const AsBuiltComparer: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const parser = new XMLParser({
           ignoreAttributes: false,
@@ -98,22 +102,23 @@ export const AsBuiltComparer: React.FC = () => {
           preserveOrder: false,
           trimValues: true,
           parseAttributeValue: true,
-          parseTagValue: false,  // critical change
+          parseTagValue: false, // critical change
           tagValueProcessor: (tagName, tagValue) => {
             if (typeof tagValue === 'string' && /^[0-9A-Fa-f]+$/.test(tagValue)) {
               const padded = tagValue.padStart(4, '0');
               return padded;
             }
             return tagValue;
-          }
+          },
         });
         const result = parser.parse(e.target?.result as string);
         console.log(`File ${fileNumber} parsed result:`, result);
-        
+
         // Extract VIN - handle both attribute and element formats
-        const vin = result.AS_BUILT_DATA.VEHICLE['@_VIN'] || 
-                   result.AS_BUILT_DATA.VEHICLE.VIN || 
-                   'Unknown VIN';
+        const vin =
+          result.AS_BUILT_DATA.VEHICLE['@_VIN'] ||
+          result.AS_BUILT_DATA.VEHICLE.VIN ||
+          'Unknown VIN';
         if (fileNumber === 1) {
           setFile1(file);
           setVin1(vin);
@@ -123,7 +128,9 @@ export const AsBuiltComparer: React.FC = () => {
         }
         setError(null);
       } catch (err) {
-        setError(`Error parsing file ${fileNumber}: ${err instanceof Error ? err.message : String(err)}`);
+        setError(
+          `Error parsing file ${fileNumber}: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     };
     reader.readAsText(file);
@@ -142,14 +149,14 @@ export const AsBuiltComparer: React.FC = () => {
         preserveOrder: false,
         trimValues: true,
         parseAttributeValue: true,
-        parseTagValue: false,  // critical change
+        parseTagValue: false, // critical change
         tagValueProcessor: (tagName, tagValue) => {
           if (typeof tagValue === 'string' && /^[0-9A-Fa-f]+$/.test(tagValue)) {
             const padded = tagValue.padStart(4, '0');
             return padded;
           }
           return tagValue;
-        }
+        },
       });
 
       const file1Data = parser.parse(text1);
@@ -167,8 +174,12 @@ export const AsBuiltComparer: React.FC = () => {
       console.log('File 2 VEHICLE keys:', Object.keys(file2Data.AS_BUILT_DATA.VEHICLE));
 
       // Get all module types from both files
-      const moduleTypes1 = Object.keys(file1Data.AS_BUILT_DATA.VEHICLE).filter(key => key.endsWith('_MODULE'));
-      const moduleTypes2 = Object.keys(file2Data.AS_BUILT_DATA.VEHICLE).filter(key => key.endsWith('_MODULE'));
+      const moduleTypes1 = Object.keys(file1Data.AS_BUILT_DATA.VEHICLE).filter(key =>
+        key.endsWith('_MODULE')
+      );
+      const moduleTypes2 = Object.keys(file2Data.AS_BUILT_DATA.VEHICLE).filter(key =>
+        key.endsWith('_MODULE')
+      );
 
       console.log('Module types in file 1:', moduleTypes1);
       console.log('Module types in file 2:', moduleTypes2);
@@ -227,7 +238,7 @@ export const AsBuiltComparer: React.FC = () => {
               codes1: ['N/A', 'N/A', 'N/A'],
               codes2,
               ori2: data2.CODE,
-              differences: [[]]
+              differences: [[]],
             });
             continue;
           } else if (data1 && !data2) {
@@ -242,7 +253,7 @@ export const AsBuiltComparer: React.FC = () => {
               codes1,
               codes2: ['N/A', 'N/A', 'N/A'],
               ori2: [],
-              differences: [[]]
+              differences: [[]],
             });
             continue;
           }
@@ -262,7 +273,7 @@ export const AsBuiltComparer: React.FC = () => {
           for (let j = 0; j < Math.max(codes1.length, codes2.length); j++) {
             const code1 = codes1[j] || '';
             const code2 = codes2[j] || '';
-            
+
             if (code1 !== code2) {
               // Track character-level differences
               const charDifferences: number[] = [];
@@ -284,7 +295,7 @@ export const AsBuiltComparer: React.FC = () => {
             codes1,
             codes2,
             ori2: data2.CODE,
-            differences
+            differences,
           });
         }
       }
@@ -345,7 +356,7 @@ export const AsBuiltComparer: React.FC = () => {
         const moduleId = nodeId.split('-')[0];
         console.log(`Comparing node ${nodeId} (module ${moduleId}):`, {
           partNumber1: finalPartNumberMap1.get(moduleId),
-          partNumber2: finalPartNumberMap2.get(moduleId)
+          partNumber2: finalPartNumberMap2.get(moduleId),
         });
 
         if (!node1 && node2) {
@@ -356,7 +367,7 @@ export const AsBuiltComparer: React.FC = () => {
             value2: node2['@_ID'],
             partNumber1: 'N/A',
             partNumber2: finalPartNumberMap2.get(moduleId) || 'N/A',
-            difference: 'Node missing in Car 1'
+            difference: 'Node missing in Car 1',
           });
         } else if (node1 && !node2) {
           nodeResults.push({
@@ -366,7 +377,7 @@ export const AsBuiltComparer: React.FC = () => {
             value2: 'N/A',
             partNumber1: finalPartNumberMap1.get(moduleId) || 'N/A',
             partNumber2: 'N/A',
-            difference: 'Node missing in Car 2'
+            difference: 'Node missing in Car 2',
           });
         } else {
           const partNumber1 = finalPartNumberMap1.get(moduleId) || 'N/A';
@@ -388,7 +399,7 @@ export const AsBuiltComparer: React.FC = () => {
               value2: node2['@_ID'],
               partNumber1,
               partNumber2,
-              difference: differences.join(', ')
+              difference: differences.join(', '),
             });
           }
         }
@@ -401,26 +412,32 @@ export const AsBuiltComparer: React.FC = () => {
       console.log('Comparison results:', { results, nodeResults });
 
       // Group results by module type
-      const groupedResultsMap = results.reduce((acc, result) => {
-        // Extract the 3-character module ID
-        const moduleId = result.label.split('-')[0];
-        if (!acc[moduleId]) {
-          acc[moduleId] = [];
-        }
-        acc[moduleId].push(result);
-        return acc;
-      }, {} as Record<string, ComparisonResult[]>);
+      const groupedResultsMap = results.reduce(
+        (acc, result) => {
+          // Extract the 3-character module ID
+          const moduleId = result.label.split('-')[0];
+          if (!acc[moduleId]) {
+            acc[moduleId] = [];
+          }
+          acc[moduleId].push(result);
+          return acc;
+        },
+        {} as Record<string, ComparisonResult[]>
+      );
 
       // Group node results by module type
-      const groupedNodeResultsMap = nodeResults.reduce((acc, result) => {
-        // Extract the 3-character module ID
-        const moduleId = result.label.split('-')[0];
-        if (!acc[moduleId]) {
-          acc[moduleId] = [];
-        }
-        acc[moduleId].push(result);
-        return acc;
-      }, {} as Record<string, NodeComparisonResult[]>);
+      const groupedNodeResultsMap = nodeResults.reduce(
+        (acc, result) => {
+          // Extract the 3-character module ID
+          const moduleId = result.label.split('-')[0];
+          if (!acc[moduleId]) {
+            acc[moduleId] = [];
+          }
+          acc[moduleId].push(result);
+          return acc;
+        },
+        {} as Record<string, NodeComparisonResult[]>
+      );
 
       console.log('Grouped results:', groupedResultsMap);
       console.log('Grouped node results:', groupedNodeResultsMap);
@@ -482,34 +499,53 @@ export const AsBuiltComparer: React.FC = () => {
 
       {showComparison && (
         <div>
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
             <Typography variant="h6">Car 1 VIN: {vin1}</Typography>
             <Typography variant="h6">Car 2 VIN: {vin2}</Typography>
           </Box>
           <h2>Comparison Results</h2>
           {Object.entries(groupedResults).map(([moduleId, results]) => {
             const moduleInfo = getModuleInfo(moduleId);
-            const moduleName = moduleInfo ? `${moduleInfo.shortName} (${moduleInfo.longName})` : moduleId;
-            
+            const moduleName = moduleInfo
+              ? `${moduleInfo.shortName} (${moduleInfo.longName})`
+              : moduleId;
+
             return (
               <Accordion key={moduleId}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography>
-                    {moduleName} - {results.length} blocks {results.filter(r => r.differences.some(diff => diff.length > 0)).length === 0 ? 
-                      <Box component="span" sx={{ color: 'success.main', fontWeight: 'bold' }}>Identical</Box> : 
+                    {moduleName} - {results.length} blocks{' '}
+                    {results.filter(r => r.differences.some(diff => diff.length > 0)).length ===
+                    0 ? (
+                      <Box component="span" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                        Identical
+                      </Box>
+                    ) : (
                       `(${results.filter(r => r.differences.some(diff => diff.length > 0)).length} differences)`
-                    }
+                    )}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="subtitle1">
                       Part Numbers:{' '}
-                      <Box component="span" sx={{ 
-                        color: partNumberMap1.get(moduleId) === partNumberMap2.get(moduleId) ? 'success.main' : 'inherit',
-                        fontWeight: partNumberMap1.get(moduleId) === partNumberMap2.get(moduleId) ? 'bold' : 'normal'
-                      }}>
-                        {partNumberMap1.get(moduleId) || 'N/A'} / {partNumberMap2.get(moduleId) || 'N/A'}
+                      <Box
+                        component="span"
+                        sx={{
+                          color:
+                            partNumberMap1.get(moduleId) === partNumberMap2.get(moduleId)
+                              ? 'success.main'
+                              : 'inherit',
+                          fontWeight:
+                            partNumberMap1.get(moduleId) === partNumberMap2.get(moduleId)
+                              ? 'bold'
+                              : 'normal',
+                        }}
+                      >
+                        {partNumberMap1.get(moduleId) || 'N/A'} /{' '}
+                        {partNumberMap2.get(moduleId) || 'N/A'}
                       </Box>
                     </Typography>
                   </Box>
@@ -536,28 +572,28 @@ export const AsBuiltComparer: React.FC = () => {
                         return (
                           <TableRow key={index}>
                             <TableCell>{result.nodeId}</TableCell>
-                            {[0, 1, 2].map((codeIndex) => {
+                            {[0, 1, 2].map(codeIndex => {
                               const code1 = result.codes1[codeIndex] || '';
                               const code2 = result.codes2[codeIndex] || '';
                               const charDifferences = result.differences[codeIndex] || [];
                               const hasDifferences = charDifferences.length > 0;
                               const isIdentical = !hasDifferences && code1 !== '' && code2 !== '';
                               const isNA = code1 === 'N/A' || code2 === 'N/A';
-                              
+
                               return (
                                 <React.Fragment key={codeIndex}>
-                                  <TableCell 
-                                    sx={{ 
-                                      backgroundColor: isNA 
-                                        ? 'warning.dark' 
-                                        : isIdentical 
-                                          ? 'success.light' 
+                                  <TableCell
+                                    sx={{
+                                      backgroundColor: isNA
+                                        ? 'warning.dark'
+                                        : isIdentical
+                                          ? 'success.light'
                                           : 'transparent',
-                                      color: isNA 
-                                        ? 'warning.contrastText' 
-                                        : isIdentical 
-                                          ? 'success.contrastText' 
-                                          : 'inherit'
+                                      color: isNA
+                                        ? 'warning.contrastText'
+                                        : isIdentical
+                                          ? 'success.contrastText'
+                                          : 'inherit',
                                     }}
                                   >
                                     {code1.split('').map((char, charIndex) => (
@@ -565,26 +601,30 @@ export const AsBuiltComparer: React.FC = () => {
                                         key={charIndex}
                                         component="span"
                                         sx={{
-                                          backgroundColor: charDifferences.includes(charIndex) ? 'error.light' : 'transparent',
-                                          color: charDifferences.includes(charIndex) ? 'error.contrastText' : 'inherit',
+                                          backgroundColor: charDifferences.includes(charIndex)
+                                            ? 'error.light'
+                                            : 'transparent',
+                                          color: charDifferences.includes(charIndex)
+                                            ? 'error.contrastText'
+                                            : 'inherit',
                                         }}
                                       >
                                         {char}
                                       </Box>
                                     ))}
                                   </TableCell>
-                                  <TableCell 
-                                    sx={{ 
-                                      backgroundColor: isNA 
-                                        ? 'warning.dark' 
-                                        : isIdentical 
-                                          ? 'success.light' 
+                                  <TableCell
+                                    sx={{
+                                      backgroundColor: isNA
+                                        ? 'warning.dark'
+                                        : isIdentical
+                                          ? 'success.light'
                                           : 'transparent',
-                                      color: isNA 
-                                        ? 'warning.contrastText' 
-                                        : isIdentical 
-                                          ? 'success.contrastText' 
-                                          : 'inherit'
+                                      color: isNA
+                                        ? 'warning.contrastText'
+                                        : isIdentical
+                                          ? 'success.contrastText'
+                                          : 'inherit',
                                     }}
                                   >
                                     {code2.split('').map((char, charIndex) => (
@@ -592,8 +632,12 @@ export const AsBuiltComparer: React.FC = () => {
                                         key={charIndex}
                                         component="span"
                                         sx={{
-                                          backgroundColor: charDifferences.includes(charIndex) ? 'error.light' : 'transparent',
-                                          color: charDifferences.includes(charIndex) ? 'error.contrastText' : 'inherit',
+                                          backgroundColor: charDifferences.includes(charIndex)
+                                            ? 'error.light'
+                                            : 'transparent',
+                                          color: charDifferences.includes(charIndex)
+                                            ? 'error.contrastText'
+                                            : 'inherit',
                                         }}
                                       >
                                         {char}
@@ -615,8 +659,10 @@ export const AsBuiltComparer: React.FC = () => {
 
           {Object.entries(groupedNodeResults).map(([moduleId, results]) => {
             const moduleInfo = getModuleInfo(moduleId);
-            const moduleName = moduleInfo ? `${moduleInfo.shortName} (${moduleInfo.longName})` : moduleId;
-            
+            const moduleName = moduleInfo
+              ? `${moduleInfo.shortName} (${moduleInfo.longName})`
+              : moduleId;
+
             return (
               <Accordion key={moduleId}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -657,4 +703,4 @@ export const AsBuiltComparer: React.FC = () => {
       )}
     </Box>
   );
-}; 
+};

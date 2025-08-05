@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-} from '@mui/material';
+import { Box, Paper, Typography, TextField, Button, Grid } from '@mui/material';
 
 export const ChecksumCalculator: React.FC = () => {
   const [moduleId, setModuleId] = useState('');
@@ -39,9 +32,11 @@ export const ChecksumCalculator: React.FC = () => {
           setModuleId(value);
         }
       } else if (parts.length === 3) {
-        if (/^[0-9A-F]{3}$/.test(parts[0]) && 
-            /^[0-9]{2}$/.test(parts[1]) && 
-            /^[0-9]{0,2}$/.test(parts[2])) {
+        if (
+          /^[0-9A-F]{3}$/.test(parts[0]) &&
+          /^[0-9]{2}$/.test(parts[1]) &&
+          /^[0-9]{0,2}$/.test(parts[2])
+        ) {
           setModuleId(value);
         }
       }
@@ -86,19 +81,19 @@ export const ChecksumCalculator: React.FC = () => {
       parseInt(xx2, 10).toString(16).padStart(2, '0'),
       parseInt(xx1, 10).toString(16).padStart(2, '0'),
       hhh.slice(1, 3),
-      hhh.slice(0, 1)
+      hhh.slice(0, 1),
     ];
 
     // Add all bytes first
     const allBytes = [...moduleIdBytes];
-    
+
     // Add all bytes of Code 1
     allBytes.push(code1.slice(0, 2), code1.slice(2, 4));
-    
+
     if (code2) {
       allBytes.push(code2.slice(0, 2), code2.slice(2, 4));
     }
-    
+
     if (code3) {
       allBytes.push(code3.slice(0, 2), code3.slice(2, 4));
     }
@@ -110,7 +105,7 @@ export const ChecksumCalculator: React.FC = () => {
     const sum = allBytes.reduce((acc, byte) => {
       return acc + parseInt(byte, 16);
     }, 0);
-    const checksum = (sum & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+    const checksum = (sum & 0xff).toString(16).toUpperCase().padStart(2, '0');
 
     // Format result in DWORD notation using original input codes
     let dword1 = code1;
@@ -143,7 +138,11 @@ export const ChecksumCalculator: React.FC = () => {
               value={moduleId}
               onChange={handleModuleIdChange}
               error={moduleId.length > 0 && !validateModuleId(moduleId)}
-              helperText={moduleId.length > 0 && !validateModuleId(moduleId) ? "Format: HHH-XX-XX (HHH is hex, XX is numeric)" : ""}
+              helperText={
+                moduleId.length > 0 && !validateModuleId(moduleId)
+                  ? 'Format: HHH-XX-XX (HHH is hex, XX is numeric)'
+                  : ''
+              }
               placeholder="HHH-XX-XX"
               inputProps={{ maxLength: 9 }}
             />
@@ -155,7 +154,7 @@ export const ChecksumCalculator: React.FC = () => {
               value={code1}
               onChange={handleCode1Change}
               error={code1.length > 0 && code1.length !== 4}
-              helperText={code1.length > 0 && code1.length !== 4 ? "Must be 4 characters" : ""}
+              helperText={code1.length > 0 && code1.length !== 4 ? 'Must be 4 characters' : ''}
               inputProps={{ maxLength: 4 }}
             />
           </Grid>
@@ -198,4 +197,4 @@ export const ChecksumCalculator: React.FC = () => {
       </Paper>
     </Box>
   );
-}; 
+};
