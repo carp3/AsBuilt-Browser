@@ -129,11 +129,7 @@ export const moduleMapping: Record<string, ModuleInfo> = {
   '721': { longName: 'Vehicle Dynamics Module', shortName: 'VDM', prefix: '721' },
   '091': { longName: 'Vehicle Emergency Messaging System', shortName: 'VEMS', prefix: '091' },
   '755': { longName: 'Vehicle Security Module', shortName: 'VSM', prefix: '755' },
-  '754': {
-    longName: 'Telematics Control Unit',
-    shortName: 'TCU',
-    prefix: '754',
-  },
+  '754': { longName: 'Telematics Control Unit', shortName: 'TCU', prefix: '754' },
   '726': {
     longName: 'Body Control Module',
     shortName: 'BdyCM',
@@ -149,6 +145,7 @@ export const moduleMapping: Record<string, ModuleInfo> = {
     shortName: 'ACCM',
     prefix: '7C7',
   },
+
 };
 
 // F-code mapping from NodeNames.txt
@@ -287,4 +284,4 @@ export function getFCodeDescription(code: string): string {
 
 export function getNodeModuleName(prefix: string): string {
   return nodeIdToModule[prefix] || prefix;
-} 
+}
