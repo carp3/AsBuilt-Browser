@@ -13,14 +13,21 @@ export const ChecksumCalculator: React.FC = () => {
   };
 
   const validateModuleId = (value: string): boolean => {
-    // Format: HHH-XX-XX where HHH is hex and XX is numeric
-    return /^[0-9A-Fa-f]{3}-[0-9]{2}-[0-9]{2}$/.test(value);
+    // Format: HHH-N-N where HHH is hex and N is a decimal byte (0-255).
+    const match = value.match(/^([0-9A-Fa-f]{3})-([0-9]{1,3})-([0-9]{1,3})$/);
+    if (!match) return false;
+
+    const [, , address1, address2] = match;
+    return [address1, address2].every(part => {
+      const byte = Number(part);
+      return Number.isInteger(byte) && byte >= 0 && byte <= 255;
+    });
   };
 
   const handleModuleIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.toUpperCase();
-    // Allow input up to 9 characters (3 hex + 2 dashes + 2 digits + 2 digits)
-    if (value.length <= 9) {
+    // Allow input up to 11 characters (3 hex + 2 dashes + up to 3 digits + up to 3 digits)
+    if (value.length <= 11) {
       // Only allow hex characters before the first dash
       const parts = value.split('-');
       if (parts.length === 1) {
@@ -28,14 +35,14 @@ export const ChecksumCalculator: React.FC = () => {
           setModuleId(value);
         }
       } else if (parts.length === 2) {
-        if (/^[0-9A-F]{3}$/.test(parts[0]) && /^[0-9]{0,2}$/.test(parts[1])) {
+        if (/^[0-9A-F]{3}$/.test(parts[0]) && /^[0-9]{0,3}$/.test(parts[1])) {
           setModuleId(value);
         }
       } else if (parts.length === 3) {
         if (
           /^[0-9A-F]{3}$/.test(parts[0]) &&
-          /^[0-9]{2}$/.test(parts[1]) &&
-          /^[0-9]{0,2}$/.test(parts[2])
+          /^[0-9]{1,3}$/.test(parts[1]) &&
+          /^[0-9]{0,3}$/.test(parts[2])
         ) {
           setModuleId(value);
         }
@@ -66,7 +73,7 @@ export const ChecksumCalculator: React.FC = () => {
 
   const calculateChecksum = () => {
     if (!validateModuleId(moduleId)) {
-      setResult('Invalid Module ID format (HHH-XX-XX)');
+      setResult('Invalid Module ID format (HHH-N-N, address bytes must be 0-255)');
       return;
     }
 
@@ -140,11 +147,11 @@ export const ChecksumCalculator: React.FC = () => {
               error={moduleId.length > 0 && !validateModuleId(moduleId)}
               helperText={
                 moduleId.length > 0 && !validateModuleId(moduleId)
-                  ? 'Format: HHH-XX-XX (HHH is hex, XX is numeric)'
+                  ? 'Format: HHH-N-N (HHH is hex, N is a decimal byte from 0-255)'
                   : ''
               }
-              placeholder="HHH-XX-XX"
-              inputProps={{ maxLength: 9 }}
+              placeholder="HHH-N-N"
+              inputProps={{ maxLength: 11 }}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
